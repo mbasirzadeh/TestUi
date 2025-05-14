@@ -1,4 +1,4 @@
-package ir.android.testui.presentation.ui.theme
+package ir.android.testui.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
