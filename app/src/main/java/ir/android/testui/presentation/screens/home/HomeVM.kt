@@ -44,6 +44,8 @@ class HomeVM @Inject constructor(
                 is HomeIntent.LoadDiscountItems -> loadDiscountItems()
                 is HomeIntent.LoadRecommendedItems -> loadRecommendedItems()
                 is HomeIntent.OnBannerClick -> {}
+                is HomeIntent.OnCartClick -> {}
+                is HomeIntent.OnNotificationsClick -> {}
             }
         }
     }

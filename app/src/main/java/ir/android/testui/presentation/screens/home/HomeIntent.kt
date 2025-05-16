@@ -8,4 +8,6 @@ sealed class HomeIntent : BaseIntent() {
     object LoadDiscountItems : HomeIntent()
     object LoadRecommendedItems : HomeIntent()
     data class OnBannerClick(val id: Int) : HomeIntent()
+    data object OnNotificationsClick : HomeIntent()
+    data object OnCartClick : HomeIntent()
 }

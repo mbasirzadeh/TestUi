@@ -171,7 +171,7 @@ private fun RecommendedSectionHeader() {
 
 
 @Composable
-fun DeliveryHeader() {
+fun DeliveryHeader(viewModel: HomeVM = hiltViewModel()) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -223,7 +223,7 @@ fun DeliveryHeader() {
                     shape = CircleShape
                 )
                 .clip(CircleShape)
-                .clickable { /* Handle click */ },
+                .clickable { viewModel.handleIntent(HomeIntent.OnNotificationsClick) },
             contentAlignment = Alignment.Center
         ) {
             BadgedBox(
@@ -254,7 +254,7 @@ fun DeliveryHeader() {
                     shape = CircleShape
                 )
                 .clip(CircleShape)
-                .clickable { /* Handle click */ },
+                .clickable { viewModel.handleIntent(HomeIntent.OnCartClick) },
             contentAlignment = Alignment.Center
         ) {
             BadgedBox(
