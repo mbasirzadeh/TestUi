@@ -34,11 +34,15 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,7 +59,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.android.testui.R
+import ir.android.testui.presentation.model.Banner
 import ir.android.testui.presentation.model.FoodCategory
 import ir.android.testui.presentation.model.FoodItem
 import ir.android.testui.presentation.navigation.AppNavGraph
@@ -65,79 +71,16 @@ import ir.android.testui.presentation.theme.lightGray
 import ir.android.testui.presentation.theme.primaryGreen
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HomeVM = hiltViewModel()) {
 
-    val categories = listOf(
-        FoodCategory("Hamburger", R.drawable.ic_hamburger),
-        FoodCategory("Pizza", R.drawable.ic_pizza),
-        FoodCategory("Noodles", R.drawable.ic_noodles),
-        FoodCategory("Meat", R.drawable.ic_meat),
-        FoodCategory("Vegetables", R.drawable.ic_vegetables),
-        FoodCategory("Dessert", R.drawable.ic_dessert),
-        FoodCategory("Drink", R.drawable.ic_drink),
-        FoodCategory("More", R.drawable.ic_more)
-    )
+    val banner by viewModel.bannerState.collectAsState()
+    val categories by viewModel.categoriesState.collectAsState()
+    val discountItems by viewModel.discountState.collectAsState()
+    val recommendedItems by viewModel.recommendedState.collectAsState()
 
-    val discountItems = listOf(
-        FoodItem(
-            "Mixed Salad Bowl",
-            imageId = R.drawable.img_salad_bowl,
-            distance = "1.5 km",
-            rating = 4.8f,
-            reviews = "1.2k",
-            originalPrice = 6.00f,
-            deliveryPrice = 2.00f
-        ),
-        FoodItem(
-            "Vegetarian Menu",
-            imageId = R.drawable.img_vegetarian,
-            distance = "1.7 km",
-            rating = 4.7f,
-            reviews = "900",
-            originalPrice = 5.50f,
-            deliveryPrice = 2.00f
-        )
-    )
-
-    val recommendedItems = listOf(
-        FoodItem(
-            "Vegetarian Noodles",
-            imageId = R.drawable.img_veggie_noodles,
-            distance = "800 m",
-            rating = 4.9f,
-            reviews = "2.3k",
-            originalPrice = 0f,
-            deliveryPrice = 2.00f
-        ),
-        FoodItem(
-            "Pizza Hut - Lumintu",
-            imageId = R.drawable.img_pizza,
-            distance = "1.2 km",
-            rating = 4.5f,
-            reviews = "19k",
-            originalPrice = 0f,
-            deliveryPrice = 1.50f,
-            isFavorite = true
-        ),
-        FoodItem(
-            "Mozarella Cheese Burger",
-            imageId = R.drawable.img_cheeseburger,
-            distance = "1.6 km",
-            rating = 4.6f,
-            reviews = "1.5k",
-            originalPrice = 0f,
-            deliveryPrice = 2.50f
-        ),
-        FoodItem(
-            "Fruit Salad - Kumpa",
-            imageId = R.drawable.img_fruit_salad,
-            distance = "1.4 km",
-            rating = 4.7f,
-            reviews = "1.7k",
-            originalPrice = 0f,
-            deliveryPrice = 2.00f
-        )
-    )
+    LaunchedEffect(Unit) {
+        viewModel.handleIntent(HomeIntent.LoadAll)
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -147,19 +90,11 @@ fun HomeScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
-            DeliveryHeader()
-            Spacer(modifier = Modifier.height(8.dp))
-            SearchBar()
+            HomeHeader()
         }
 
         item {
-            SectionHeader(
-                title = "Special Offers",
-                showSeeAll = true,
-                onSeeAllClick = { /* Handle see all click */ }
-            )
-            SpecialOfferBanner { /* Handle banner click */ }
+            SpecialOffersSection(banner = banner)
         }
 
         item {
@@ -167,22 +102,11 @@ fun HomeScreen() {
         }
 
         item {
-            SectionHeader(
-                title = "Discount Guaranteed! 👌",
-                showSeeAll = true,
-                onSeeAllClick = { /* Handle see all click */ }
-            )
-            DiscountSection(discountItems = discountItems)
+            DiscountSectionWrapper(discountItems = discountItems)
         }
 
         item {
-            SectionHeader(
-                title = "Recommended For You 😍",
-                showSeeAll = true,
-                onSeeAllClick = { /* Handle see all click */ }
-            )
-            FilterChips()
-            Spacer(modifier = Modifier.height(15.dp))
+            RecommendedSectionHeader()
         }
 
         items(recommendedItems) { item ->
@@ -192,6 +116,56 @@ fun HomeScreen() {
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+private fun HomeHeader() {
+    Column {
+        Spacer(modifier = Modifier.height(8.dp))
+        DeliveryHeader()
+        Spacer(modifier = Modifier.height(8.dp))
+        SearchBar()
+    }
+}
+
+@Composable
+private fun SpecialOffersSection(banner: Banner?, viewModel: HomeVM = hiltViewModel()) {
+    banner?.let {
+        Column {
+            SectionHeader(
+                title = "Special Offers",
+                showSeeAll = true,
+                onSeeAllClick = { /* Handle see all click */ }
+            )
+            SpecialOfferBanner(banner) { viewModel.handleIntent(HomeIntent.OnBannerClick(banner.id)) }
+        }
+    }
+
+}
+
+@Composable
+private fun DiscountSectionWrapper(discountItems: List<FoodItem>) {
+    Column {
+        SectionHeader(
+            title = "Discount Guaranteed! 👌",
+            showSeeAll = true,
+            onSeeAllClick = { /* Handle see all click */ }
+        )
+        DiscountSection(discountItems = discountItems)
+    }
+}
+
+@Composable
+private fun RecommendedSectionHeader() {
+    Column {
+        SectionHeader(
+            title = "Recommended For You 😍",
+            showSeeAll = true,
+            onSeeAllClick = { /* Handle see all click */ }
+        )
+        FilterChips()
+        Spacer(modifier = Modifier.height(15.dp))
     }
 }
 
@@ -311,7 +285,7 @@ fun SearchBar() {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(15.dp))
-            .background(lightGray),
+            .background(MaterialTheme.colorScheme.surface),
         value = searchText.value,
         onValueChange = { searchText.value = it },
         placeholder = { Text(modifier = Modifier, text = "What are you craving?") },
@@ -368,10 +342,11 @@ fun SectionHeader(
 
 @Composable
 fun SpecialOfferBanner(
+    bannerItem : Banner,
     onBannerClick: () -> Unit = {}
 ) {
     Image(
-        painter = painterResource(id = R.drawable.img_burger),
+        painter = painterResource(bannerItem.image),
         contentDescription = "Special Offer",
         contentScale = ContentScale.Crop,
         modifier = Modifier
@@ -745,9 +720,11 @@ fun RecommendedFoodItem(foodItem: FoodItem) {
             Column(
                 modifier = Modifier
             ) {
-                Spacer(modifier = Modifier
-                    .height(60.dp)
-                    .width(1.dp))
+                Spacer(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .width(1.dp)
+                )
                 Icon(
                     imageVector = if (foodItem.isFavorite)
                         ImageVector.vectorResource(R.drawable.ic_favorite_filled)
